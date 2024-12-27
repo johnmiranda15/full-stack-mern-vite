@@ -5,12 +5,11 @@ import fileUpload from "express-fileupload";
 import path from 'path'
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { createRoles } from './libs/initialSetup.js'; 
 import postRoutes from './routes/posts.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import usersRoutes from './routes/users.routes.js';
 
 const app = express();
-createRoles();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 app.use(cors());
@@ -29,7 +28,9 @@ app.use(express.static(path.join(__dirname, '../client/dist')));
 
 // Routes
 app.use("/api", postRoutes);
+app.use("/api/users", usersRoutes);
 app.use("/api/auth", authRoutes);
+app.set("json spaces", 4);
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
