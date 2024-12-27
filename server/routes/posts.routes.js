@@ -6,22 +6,18 @@ import {
   removePost,
   getPosts,
 } from "../controllers/posts.controllers.js";
+import { verifyToken, isModerator, isAdmin } from "../middlewares/authJwt.js";
 
 const router = Router();
-
-// Ruta raíz
-router.get("/", (req, res) => {
-  res.send("Bienvenido al backend en producción");
-});
 
 router.get("/posts", getPosts);
 
 router.get("/posts/:id", getPost);
 
-router.post("/posts", createPost);
+router.post("/posts", [verifyToken, isModerator], createPost);
 
-router.put("/posts/:id", updatePost);
+router.put("/posts/:id", [verifyToken, isModerator], updatePost);
 
-router.delete("/posts/:id", removePost);
+router.delete("/posts/:id", [verifyToken, isAdmin], removePost);
 
 export default router;
