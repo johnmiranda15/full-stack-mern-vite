@@ -28,6 +28,18 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+// Middleware to encrypt password before saving
+userSchema.pre("save", async function (next) {
+  const user = this;
+  if (!user.isModified("password")) {
+    return next();
+  }
+  const hash = await bcrypt.hash(user.password, 10);
+  user.password = hash;
+  next();
+});
+
+// Static methods for password encryption and comparison
 userSchema.statics.encryptPassword = async (password) => {
   const salt = await bcrypt.genSalt(10);
   return await bcrypt.hash(password, salt);
@@ -36,6 +48,5 @@ userSchema.statics.encryptPassword = async (password) => {
 userSchema.statics.comparePassword = async (password, receivedPassword) => {
   return await bcrypt.compare(password, receivedPassword);
 };
-
 
 export default mongoose.model("User", userSchema);
