@@ -1,6 +1,7 @@
 import { app } from "./app.js";
 import { connectDB } from "./db.js";
 import { PORT } from "./config.js";
+import "./libs/initialSetup.js";
 
 connectDB();
 app.listen(PORT);
