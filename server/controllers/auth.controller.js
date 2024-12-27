@@ -31,7 +31,7 @@ export const signupHandler = async (req, res) => {
       expiresIn: 86400, // 24 hours
     });
 
-    return res.status(200).json({ token });
+    return res.status(200).json({ username, email, token });
   } catch (error) {
     return res.status(500).json(error.message);
   }
@@ -40,16 +40,11 @@ export const signupHandler = async (req, res) => {
 export const signinHandler = async (req, res) => {
   try {
     // Request body email can be an email or username
-    const userFound = await User.findOne({ email: req.body.email }).populate(
-      "roles"
-    );
+    const userFound = await User.findOne({ email: req.body.email }).populate("roles");
 
     if (!userFound) return res.status(400).json({ message: "User Not Found" });
 
-    const matchPassword = await User.comparePassword(
-      req.body.password,
-      userFound.password
-    );
+    const matchPassword = await User.comparePassword(req.body.password, userFound.password);
 
     if (!matchPassword)
       return res.status(401).json({
