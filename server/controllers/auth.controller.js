@@ -14,7 +14,7 @@ export const signupHandler = async (req, res) => {
       password,
     });
 
-    // checking for roles
+    // Checking for roles
     if (roles) {
       const foundRoles = await Role.find({ name: { $in: roles } });
       newUser.roles = foundRoles.map((role) => role._id);
@@ -23,7 +23,7 @@ export const signupHandler = async (req, res) => {
       newUser.roles = [role._id];
     }
 
-    // Saving the User Object in Mongodb
+    // Saving the User Object in MongoDB
     const savedUser = await newUser.save();
 
     // Create a token
@@ -31,33 +31,60 @@ export const signupHandler = async (req, res) => {
       expiresIn: 86400, // 24 hours
     });
 
-    return res.status(200).json({ username, email, token });
+    // Setting the token in cookies
+    res.cookie("token", token, { httpOnly: true });
+
+    // Send response
+    res.status(201).json({
+      message: "User registered successfully",
+      token: token,
+    });
   } catch (error) {
-    return res.status(500).json(error.message);
+    return res.status(500).json({ message: error.message });
   }
-};
+}
 
 export const signinHandler = async (req, res) => {
   try {
-    // Request body email can be an email or username
-    const userFound = await User.findOne({ email: req.body.email }).populate("roles");
+    const { email, password } = req.body;
 
-    if (!userFound) return res.status(400).json({ message: "User Not Found" });
+    // Validar que email y password están presentes
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
 
-    const matchPassword = await User.comparePassword(req.body.password, userFound.password);
+    // Buscar usuario por email
+    const userFound = await User.findOne({ email }).populate("roles");
 
-    if (!matchPassword)
+    if (!userFound) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    // Comparar la contraseña
+    const matchPassword = await User.comparePassword(password, userFound.password);
+
+    if (!matchPassword) {
       return res.status(401).json({
         token: null,
-        message: "Invalid Password",
+        message: "Invalid password",
       });
+    }
 
+    // Generar el token
     const token = jwt.sign({ id: userFound._id }, SECRET, {
-      expiresIn: 86400, // 24 hours
+      expiresIn: 86400, // 24 horas
     });
 
-    res.json({ token });
+    // Configurar el token en una cookie (opcional)
+    res.cookie("token", token, { httpOnly: true });
+
+    // Responder con éxito
+    res.json({
+      message: "Signin successful",
+      token,
+    });
   } catch (error) {
-    console.log(error);
+    console.error("Error during signin:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
