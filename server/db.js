@@ -1,10 +1,13 @@
 import mongoose from "mongoose";
 import { MONGODB_URI } from "./config.js";
+import { initializeDatabase } from "./libs/initialSetup.js";
 
 export const connectDB = async () => {
   try {
     await mongoose.connect(MONGODB_URI);
     console.log("MongoDB connected successfully");
+    // Inicializar la base de datos (roles y administrador)
+    initializeDatabase();
   } catch (error) {
     console.error("Error connecting to MongoDB:", error.message);
     process.exit(1);
