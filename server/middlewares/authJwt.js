@@ -1,23 +1,26 @@
 import jwt from "jsonwebtoken";
-import { SECRET } from "../config.js";
+import { TOKEN_SECRET } from "../config.js";
 import User from "../models/User.js";
 import Role from "../models/Role.js";
 
-export const verifyToken = async (req, res, next) => {
-  let token = req.headers["x-access-token"];
-
-  if (!token) return res.status(403).json({ message: "No token provided" });
-
+export const verifyToken = (req, res, next) => {
   try {
-    const decoded = jwt.verify(token, SECRET);
-    req.userId = decoded.id;
+    const { token } = req.cookies;
 
-    const user = await User.findById(req.userId, { password: 0 });
-    if (!user) return res.status(404).json({ message: "No user found" });
+    if (!token)
+      return res
+        .status(401)
+        .json({ message: "No token, authorization denied" });
 
-    next();
+    jwt.verify(token, TOKEN_SECRET, (error, user) => {
+      if (error) {
+        return res.status(401).json({ message: "Token is not valid" });
+      }
+      req.user = user;
+      next();
+    });
   } catch (error) {
-    return res.status(401).json({ message: "Unauthorized!" });
+    return res.status(500).json({ message: error.message });
   }
 };
 
