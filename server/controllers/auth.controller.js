@@ -1,7 +1,6 @@
-import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Role from "../models/Role.js";
-import { SECRET } from "../config.js";
+import {createAccessToken} from "../libs/jwt.js";
 
 export const signupHandler = async (req, res) => {
   try {
@@ -25,15 +24,10 @@ export const signupHandler = async (req, res) => {
 
     // Saving the User Object in MongoDB
     const savedUser = await newUser.save();
-
     // Create a token
-    const token = jwt.sign({ id: savedUser._id }, SECRET, {
-      expiresIn: 86400, // 24 hours
-    });
-
+    const token = await createAccessToken({id: savedUser._id});
     // Setting the token in cookies
-    res.cookie("token", token, { httpOnly: true });
-
+    res.cookie("token", token);
     // Send response
     res.status(201).json({
       message: "User registered successfully",
@@ -42,12 +36,11 @@ export const signupHandler = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
-}
+};
 
 export const signinHandler = async (req, res) => {
+  const { email, password } = req.body;
   try {
-    const { email, password } = req.body;
-
     // Validar que email y password están presentes
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
@@ -64,21 +57,16 @@ export const signinHandler = async (req, res) => {
     const matchPassword = await User.comparePassword(password, userFound.password);
 
     if (!matchPassword) {
-      return res.status(401).json({
+      return res.status(400).json({
         token: null,
         message: "Invalid password",
       });
     }
-
-    // Generar el token
-    const token = jwt.sign({ id: userFound._id }, SECRET, {
-      expiresIn: 86400, // 24 horas
-    });
-
-    // Configurar el token en una cookie (opcional)
-    res.cookie("token", token, { httpOnly: true });
-
-    // Responder con éxito
+    // Create a token
+    const token = await createAccessToken({id: userFound._id});
+    // Setting the token in cookies
+    res.cookie("token", token);
+    // Send response
     res.json({
       message: "Signin successful",
       token,
@@ -88,3 +76,14 @@ export const signinHandler = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export const signoutHandler = async (req, res) => {
+  res.cookie("token", "", {
+    expires: new Date(0),
+  });
+  return res.sendStatus(200);
+};
+
+export const profileHandler = async (req, res) => {
+  console.log("profile");
+}
