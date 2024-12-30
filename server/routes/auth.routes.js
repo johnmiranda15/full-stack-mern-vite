@@ -2,6 +2,8 @@ import { Router } from "express";
 import {
   signinHandler,
   signupHandler,
+  signoutHandler,
+  profileHandler
 } from "../controllers/auth.controller.js";
 import {
   checkExistingRole,
@@ -13,7 +15,7 @@ const router = Router();
 router.use((req, res, next) => {
   res.header(
     "Access-Control-Allow-Headers",
-    "x-access-token, Origin, Content-Type, Accept"
+    "Origin, Content-Type, Accept"
   );
   next();
 });
@@ -21,5 +23,9 @@ router.use((req, res, next) => {
 router.post("/signup", [checkExistingUser, checkExistingRole], signupHandler);
 
 router.post("/signin", signinHandler);
+
+router.post("/signout", signoutHandler);
+
+router.get("/profile", profileHandler);
 
 export default router;
