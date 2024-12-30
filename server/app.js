@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from "morgan";
 import fileUpload from "express-fileupload";
+import cookieParser from 'cookie-parser';
 import path from 'path'
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -15,6 +16,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 
 app.use(
